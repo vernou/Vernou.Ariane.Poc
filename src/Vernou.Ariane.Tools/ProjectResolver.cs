@@ -1,10 +1,9 @@
 ﻿using NuGet.ProjectModel;
 using System.Globalization;
-using System.Xml.Linq;
 
 namespace Vernou.Ariane.Tools;
 
-internal class ProjectResolver
+public class ProjectResolver
 {
     private readonly LockFile _assetsFile;
     private readonly Dictionary<string, Models.PackageDependency> _packagesCache = new();

@@ -2,7 +2,7 @@
 
 namespace Vernou.Ariane.Tools.Models;
 
-internal class PackageDependency
+public class PackageDependency
 {
     public required string Name { get; init; }
     public required SemanticVersion ResolvedVersion { get; init; }
