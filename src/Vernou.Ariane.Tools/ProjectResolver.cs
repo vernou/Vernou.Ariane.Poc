@@ -1,5 +1,6 @@
 ﻿using NuGet.ProjectModel;
 using System.Globalization;
+using Vernou.Ariane.Tools.NuGetWrapper;
 
 namespace Vernou.Ariane.Tools;
 
@@ -11,7 +12,7 @@ public class ProjectResolver
     private readonly LockFileTarget _target;
     private readonly LockFileTargetLibrary[] _packageLibraries;
     private readonly LockFileTargetLibrary[] _projectLibraries;
-    private readonly NuGetApiClient _nugetApi = new();
+    private readonly INuGetClient _nugetClient = new NuGetClient();
 
     public ProjectResolver(LockFile assetsFile)
     {
@@ -38,6 +39,16 @@ public class ProjectResolver
             root.AddPackageReference(packageDependency, projectDependency.LibraryRange.VersionRange!);
         }
 
+        foreach(var projectLibrarie in _projectLibraries)
+        {
+            if(string.IsNullOrEmpty(projectLibrarie.Name))
+            {
+                throw new InvalidOperationException("Project Reference haven't a name.");
+            }
+            var projectDependency = GetProject(projectLibrarie.Name);
+            root.AddProjectReference(projectDependency);
+        }
+
         return root;
     }
 
@@ -60,24 +71,13 @@ public class ProjectResolver
         }
 
         var library = foundLibraries[0];
-
-        var hasVulnerability = false;
-        var isDeprecated = false;
-        var metadata = _nugetApi.GetPackageVersionMetadata(library.Name!, library.Version!).Result;
-        if(metadata.Vulnerabilities?.Any() ?? false)
-        {
-            hasVulnerability = true;
-        }
-        if(metadata.GetDeprecationMetadataAsync().Result is not null)
-        {
-            isDeprecated = true;
-        }
+        var packageVersionInfo = _nugetClient.GetPackageVersionInfo(library.Name!, library.Version!).Result;
 
         var dep = new Models.PackageDependency {
             Name = library.Name!,
             ResolvedVersion = library.Version!,
-            HasVulnerability = hasVulnerability,
-            IsDeprecated = isDeprecated
+            HasVulnerability = packageVersionInfo.HasVulnerability,
+            IsDeprecated = packageVersionInfo.IsDeprecated
         };
         _packagesCache.Add(name, dep);
 

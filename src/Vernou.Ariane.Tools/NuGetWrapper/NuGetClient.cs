@@ -2,22 +2,31 @@
 using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
 
-namespace Vernou.Ariane.Tools;
+namespace Vernou.Ariane.Tools.NuGetWrapper;
 
-public class NuGetApiClient
+internal sealed class NuGetClient : INuGetClient
 {
     private readonly SourceRepository _repository;
     private readonly PackageMetadataResource _packageMetadataResource;
     private readonly SourceCacheContext _sourceCacheContext;
 
-    public NuGetApiClient()
+    public NuGetClient()
     {
         _repository = Repository.Factory.GetCoreV3("https://api.nuget.org/v3/index.json");
         _packageMetadataResource = _repository.GetResource<PackageMetadataResource>();
         _sourceCacheContext = new SourceCacheContext();
     }
 
-    public async Task<IPackageSearchMetadata> GetPackageVersionMetadata(string packageId, SemanticVersion version)
+    async Task<PackageVersionInfo> INuGetClient.GetPackageVersionInfo(string packageId, SemanticVersion version)
+    {
+        var metadata = await GetPackageVersionMetadata(packageId, version);
+        return new PackageVersionInfo {
+            HasVulnerability = metadata.Vulnerabilities?.Any() ?? false,
+            IsDeprecated = metadata.GetDeprecationMetadataAsync().Result is not null
+        };
+    }
+
+    private async Task<IPackageSearchMetadata> GetPackageVersionMetadata(string packageId, SemanticVersion version)
     {
         var packageMetadata = await GetPackageMetadata(packageId);
         var packageMedatadaWhere = packageMetadata.Where(m => m.Identity.Version == version).ToList();
@@ -32,7 +41,7 @@ public class NuGetApiClient
         return packageMedatadaWhere[0];
     }
 
-    public async Task<IEnumerable<IPackageSearchMetadata>> GetPackageMetadata(string packageId)
+    private async Task<IEnumerable<IPackageSearchMetadata>> GetPackageMetadata(string packageId)
     {
         var packageMetadata = await _packageMetadataResource.GetMetadataAsync(
             packageId,
