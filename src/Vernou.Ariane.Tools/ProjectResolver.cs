@@ -110,8 +110,8 @@ public class ProjectResolver
         var projectLibrary = _projectLibraries.Single(l => l.Name!.Equals(name));
 
         var project = new Models.Project {
-            Name = projectLibrary.Name,
-            ResolvedVersion = projectLibrary.Version
+            Name = projectLibrary.Name ?? throw new InvalidOperationException("Library haven't a name."),
+            ResolvedVersion = projectLibrary.Version ?? throw new InvalidOperationException("Library haven't a version.")
         };
         _projectsCache.Add(name, project);
         foreach(var projectDependency in projectLibrary.Dependencies)

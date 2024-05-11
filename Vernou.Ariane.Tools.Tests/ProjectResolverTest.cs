@@ -6,13 +6,13 @@ namespace Vernou.Ariane.Tools.Tests;
 public class ProjectResolverTest
 {
     [Fact]
-    public void SimpleConsoleAppProject()
+    public void ConsoleWithoutDependency()
     {
         // Arrange
 
         LockFile assetsFile;
         var lockFileFormat = new LockFileFormat();
-        assetsFile = lockFileFormat.Read("""AssetsFiles\SimpleConsoleApp.assets.json""");
+        assetsFile = lockFileFormat.Read("""AssetsFiles\ConsoleWithoutDependency.assets.json""");
 
         // Act
 
@@ -21,7 +21,7 @@ public class ProjectResolverTest
 
         // Assert
 
-        project.Name.ShouldBe("SimpleConsoleApp");
+        project.Name.ShouldBe("ConsoleWithoutDependency");
         project.ResolvedVersion.ShouldBe(new NuGet.Versioning.SemanticVersion(1, 0, 0));
         project.HasVulnerability.ShouldBeFalse();
         project.IsDeprecated.ShouldBeFalse();

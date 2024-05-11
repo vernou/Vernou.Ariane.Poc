@@ -1,6 +1,6 @@
-# SimpleConsoleApp
-dotnet new console -n "SimpleConsoleApp"
-cd SimpleConsoleApp
+# ConsoleWithoutDependency
+dotnet new console -n "ConsoleWithoutDependency"
+cd ConsoleWithoutDependency
 dotnet build
 
 # ConsoleWithLibraryWithEFCore
