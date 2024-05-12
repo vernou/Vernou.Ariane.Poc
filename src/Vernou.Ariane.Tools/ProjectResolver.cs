@@ -39,13 +39,13 @@ public class ProjectResolver
             root.AddPackageReference(packageDependency, projectDependency.LibraryRange.VersionRange!);
         }
 
-        foreach(var projectLibrarie in _projectLibraries)
+        foreach(var projectLibrary in _projectLibraries)
         {
-            if(string.IsNullOrEmpty(projectLibrarie.Name))
+            if(string.IsNullOrEmpty(projectLibrary.Name))
             {
                 throw new InvalidOperationException("Project Reference haven't a name.");
             }
-            var projectDependency = GetProject(projectLibrarie.Name);
+            var projectDependency = GetProject(projectLibrary.Name);
             root.AddProjectReference(projectDependency);
         }
 

@@ -3,7 +3,7 @@ using Shouldly;
 
 namespace Vernou.Ariane.Tools.Tests;
 
-public class ProjectResolverTest
+public sealed class ProjectResolverTest
 {
     [Fact]
     public void ConsoleWithoutDependency()

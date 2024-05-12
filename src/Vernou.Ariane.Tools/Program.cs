@@ -1,83 +1,40 @@
-﻿using NuGet.ProjectModel;
+﻿using System.CommandLine;
+using System.IO;
+using Vernou.Ariane.Tools.Commands;
 
 namespace Vernou.Ariane.Tools;
 
 public static class Program
 {
-    static async Task Main(string[] args)
+    static async Task<int> Main(string[] args)
     {
-        Console.WriteLine("Hello, Vernou!!!");
+        var rootCommand = new RootCommand("Ariane to navigate through the dependency hell.");
 
-        var projectName = """HowFix.Demo""";
-        //var assetsPath = """C:\t\HowFix.Demo\HowFix.Demo\obj\project.assets.json""";
-        var assetsPath = """C:\repos\efcore\artifacts\obj\EFCore.SqlServer\project.assets.json""";
+        Argument<IEnumerable<string>> slnOrProjectArgument = new("PROJECT | SOLUTION") {
+            Description = "The project or solution file to operate on. If a file is not specified, the command will search the current directory for one.",
+            Arity = ArgumentArity.ZeroOrMore
+        };
 
-        if(!File.Exists(assetsPath))
+        var graphCommand = new Command("graph", "Print dependencies");
+        rootCommand.AddCommand(graphCommand);
+        rootCommand.Add(slnOrProjectArgument);
+        graphCommand.SetHandler(async (slnOrProjectArgumentValue) =>
         {
-            throw new InvalidOperationException($"No assets file was found for `{projectName}`. Please run restore before running this command.");
-        }
+            await new GraphCommand().RunAsync();
+        }, slnOrProjectArgument);
 
-        var lockFileFormat = new LockFileFormat();
-        LockFile assetsFile = lockFileFormat.Read(assetsPath);
+        var auditCommand = new Command("audit", "Audit dependencies");
+        rootCommand.AddCommand(auditCommand);
+        auditCommand.SetHandler(async () =>
+        {
+            await new AuditCommand().RunAsync();
+        });
 
-        // Assets file validation
-        if(assetsFile.PackageSpec == null ||
-            assetsFile.Targets == null ||
-            assetsFile.Targets.Count == 0)
-        {
-            throw new InvalidOperationException($"Unable to read the assets file `{assetsPath}`. Please make sure the file has the write format.");
-        }
-
-        var resolver = new ProjectResolver(assetsFile);
-        var project = resolver.Resolve();
-        Display(project, 0);
-        //await new Foo().Do(project);
-    }
-
-    static void Display(Models.Project project, int level)
-    {
-        Align(level);
-        Console.WriteLine($"{project}");
-        foreach(var reference in project.ProjectReferences)
-        {
-            Display(reference, level+1);
-        }
-        foreach(var reference in project.PackageReferences)
-        {
-            Display(reference, level+1);
-        }
-    }
-
-    static void Display(Models.PackageReference package, int level)
-    {
-        Align(level);
-        Console.Write($"{package.Version} -> {package.Dependency}");
-        if(package.Dependency.HasVulnerability)
-        {
-            var origin = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.Write(" (has vulnerability)");
-            Console.ForegroundColor = origin;
-        }
-        if(package.Dependency.IsDeprecated)
-        {
-            var origin = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write(" (is deprecated)");
-            Console.ForegroundColor = origin;
-        }
-        Console.WriteLine();
-        foreach(var reference in package.Dependency.PackageReferences)
-        {
-            Display(reference, level+1);
-        }
-    }
-
-    static void Align(int level)
-    {
-        for(var i = 0; i < level; i++)
-        {
-            Console.Write('\t');
-        }
+        //return await rootCommand.InvokeAsync(args);
+        //return await rootCommand.InvokeAsync(["graph"]);
+        //return await rootCommand.InvokeAsync(["audit"]);
+        //return await rootCommand.InvokeAsync(["graph", "-h"]);
+        return await rootCommand.InvokeAsync(["""C:\repos\efcore\artifacts\obj\EFCore.SqlServer\project.assets.json""", "graph"]);
+        //return await rootCommand.InvokeAsync(["""C:\repos\efcore\artifacts\obj\EFCore.SqlServer\project.assets.json""", "graph", "-h"]);
     }
 }
