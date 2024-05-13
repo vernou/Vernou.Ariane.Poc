@@ -2,7 +2,7 @@
 using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
 
-namespace Vernou.Ariane.Tools.NuGetWrapper;
+namespace Vernou.Ariane.Tools.DotnetProvider.NuGetWrapper;
 
 internal sealed class NuGetClient : INuGetClient
 {
@@ -20,7 +20,8 @@ internal sealed class NuGetClient : INuGetClient
     async Task<PackageVersionInfo> INuGetClient.GetPackageVersionInfo(string packageId, SemanticVersion version)
     {
         var metadata = await GetPackageVersionMetadata(packageId, version);
-        return new PackageVersionInfo {
+        return new PackageVersionInfo
+        {
             HasVulnerability = metadata.Vulnerabilities?.Any() ?? false,
             IsDeprecated = metadata.GetDeprecationMetadataAsync().Result is not null
         };
@@ -30,11 +31,11 @@ internal sealed class NuGetClient : INuGetClient
     {
         var packageMetadata = await GetPackageMetadata(packageId);
         var packageMedatadaWhere = packageMetadata.Where(m => m.Identity.Version == version).ToList();
-        if(packageMedatadaWhere.Count == 0)
+        if (packageMedatadaWhere.Count == 0)
         {
             throw new InvalidOperationException($"{packageId}@{version} was not found from NuGet.org.");
         }
-        if(packageMedatadaWhere.Count > 1)
+        if (packageMedatadaWhere.Count > 1)
         {
             throw new InvalidOperationException($"Many {packageId}@{version} were found from NuGet.org.");
         }

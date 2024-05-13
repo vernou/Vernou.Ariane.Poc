@@ -1,6 +1,6 @@
 ﻿using NuGet.Versioning;
 
-namespace Vernou.Ariane.Tools.NuGetWrapper;
+namespace Vernou.Ariane.Tools.DotnetProvider.NuGetWrapper;
 
 public interface INuGetClient
 {
