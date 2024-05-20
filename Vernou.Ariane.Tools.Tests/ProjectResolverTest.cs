@@ -1,5 +1,6 @@
 using NuGet.ProjectModel;
 using Shouldly;
+using Vernou.Ariane.Tools.DotnetProvider;
 
 namespace Vernou.Ariane.Tools.Tests;
 

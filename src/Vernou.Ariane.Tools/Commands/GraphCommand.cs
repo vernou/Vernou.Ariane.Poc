@@ -1,23 +1,21 @@
-﻿using NuGet.ProjectModel;
+﻿using Vernou.Ariane.Tools.Core.Output;
 using Vernou.Ariane.Tools.DotnetProvider;
 
 namespace Vernou.Ariane.Tools.Commands;
-internal class GraphCommand
+
+public sealed class GraphCommand
 {
     private readonly string _projectPath;
+    private readonly IOutput _output;
 
-    public GraphCommand(string projectPath)
+    public GraphCommand(string projectPath, IOutput output)
     {
         _projectPath = projectPath;
+        _output = output;
     }
 
     public async Task RunAsync()
     {
-
-        //var projectName = """HowFix.Demo""";
-        //var assetsPath = """C:\t\HowFix.Demo\HowFix.Demo\obj\project.assets.json""";
-        //var assetsPath = """C:\repos\efcore\artifacts\obj\EFCore.SqlServer\project.assets.json""";
-
         if(!File.Exists(_projectPath))
         {
             throw new InvalidOperationException($"The project file `{_projectPath}` doesn't exist.");
@@ -39,10 +37,10 @@ internal class GraphCommand
         await Task.CompletedTask;
     }
 
-    static void Display(Models.Project project, int level)
+    private void Display(Models.Project project, int level)
     {
         Align(level);
-        Console.WriteLine($"{project}");
+        _output.WriteLine($"{project}");
         foreach(var reference in project.ProjectReferences)
         {
             Display(reference, level + 1);
@@ -53,36 +51,31 @@ internal class GraphCommand
         }
     }
 
-    static void Display(Models.PackageReference package, int level)
+    private void Display(Models.PackageReference package, int level)
     {
         Align(level);
-        Console.Write($"{package.Version} -> {package.Dependency}");
+        _output.Write($"{package.Version} -> {package.Dependency}");
         if(package.Dependency.HasVulnerability)
         {
-            var origin = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.Write(" (has vulnerability)");
-            Console.ForegroundColor = origin;
+            _output.Write(" (has vulnerability)", ConsoleColor.Red);
         }
         if(package.Dependency.IsDeprecated)
         {
-            var origin = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write(" (is deprecated)");
-            Console.ForegroundColor = origin;
+            _output.Write(" (is deprecated)", ConsoleColor.Yellow);
         }
-        Console.WriteLine();
+        _output.WriteLine();
         foreach(var reference in package.Dependency.PackageReferences)
         {
             Display(reference, level + 1);
         }
     }
 
-    static void Align(int level)
+    private void Align(int level)
     {
-        for(var i = 0; i < level; i++)
+        var tabs = new string('\t', level);
+        if(tabs.Length > 0)
         {
-            Console.Write('\t');
+            _output.Write(tabs);
         }
     }
 }

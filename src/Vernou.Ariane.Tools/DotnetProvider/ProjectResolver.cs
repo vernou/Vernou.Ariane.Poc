@@ -13,7 +13,7 @@ public sealed class ProjectResolver
     private readonly LockFileTargetLibrary[] _packageLibraries;
     private readonly LockFileTargetLibrary[] _projectLibraries;
     private readonly INuGetClient _nugetClient = new NuGetClient();
-
+     
     public ProjectResolver(LockFile assetsFile)
     {
         _assetsFile = assetsFile;

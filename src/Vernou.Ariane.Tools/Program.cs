@@ -1,13 +1,22 @@
 ﻿using System.CommandLine;
-using System.IO;
 using Vernou.Ariane.Tools.Commands;
+using Vernou.Ariane.Tools.Core.Output;
 
 namespace Vernou.Ariane.Tools;
 
-public static class Program
+public class Program
 {
-    static async Task<int> Main(string[] args)
+    private static Task<int> Main(string[] args)
     {
+        return Run(
+            args,
+            new ConsoleOutput()
+        );
+    }
+
+    public static async Task<int> Run(string[] args, IOutput output)
+    {
+        await Task.Delay(TimeSpan.FromSeconds(2));
         var rootCommand = new RootCommand("Ariane to navigate through the dependency hell.");
 
         Argument<IEnumerable<string>> slnOrProjectArgument = new("PROJECT | SOLUTION") {
@@ -20,21 +29,33 @@ public static class Program
         rootCommand.Add(slnOrProjectArgument);
         graphCommand.SetHandler(async (slnOrProjectArgumentValue) =>
         {
-            await new GraphCommand().RunAsync();
+            var p = slnOrProjectArgumentValue.FirstOrDefault() ?? "";
+            await new GraphCommand(p, output).RunAsync();
         }, slnOrProjectArgument);
 
         var auditCommand = new Command("audit", "Audit dependencies");
         rootCommand.AddCommand(auditCommand);
-        auditCommand.SetHandler(async () =>
+        auditCommand.SetHandler(async (slnOrProjectArgumentValue) =>
         {
-            await new AuditCommand().RunAsync();
-        });
+            var p = slnOrProjectArgumentValue.FirstOrDefault() ?? "";
+            await new AuditCommand(p, output).RunAsync();
+        }, slnOrProjectArgument);
 
         //return await rootCommand.InvokeAsync(args);
+
+        // graph
         //return await rootCommand.InvokeAsync(["graph"]);
-        //return await rootCommand.InvokeAsync(["audit"]);
         //return await rootCommand.InvokeAsync(["graph", "-h"]);
-        return await rootCommand.InvokeAsync(["""C:\repos\efcore\artifacts\obj\EFCore.SqlServer\project.assets.json""", "graph"]);
         //return await rootCommand.InvokeAsync(["""C:\repos\efcore\artifacts\obj\EFCore.SqlServer\project.assets.json""", "graph", "-h"]);
+        return await rootCommand.InvokeAsync(["""C:\repos\efcore\artifacts\obj\EFCore.SqlServer\project.assets.json""", "graph"]);
+
+        // audti
+        //return await rootCommand.InvokeAsync(["audit"]);
+        //return await rootCommand.InvokeAsync(["""C:\repos\efcore\artifacts\obj\EFCore.SqlServer\project.assets.json""", "audit", "-h"]);
+        return await rootCommand.InvokeAsync(["""C:\repos\efcore\artifacts\obj\EFCore.SqlServer\project.assets.json""", "audit"]);
+
+        //var projectName = """HowFix.Demo""";
+        //var assetsPath = """C:\t\HowFix.Demo\HowFix.Demo\obj\project.assets.json""";
+        //var assetsPath = """C:\repos\efcore\artifacts\obj\EFCore.SqlServer\project.assets.json""";
     }
 }

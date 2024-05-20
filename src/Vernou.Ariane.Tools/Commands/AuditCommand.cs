@@ -1,32 +1,38 @@
 ﻿using NuGet.ProjectModel;
+using Vernou.Ariane.Tools.Core.Output;
+using Vernou.Ariane.Tools.DotnetProvider;
 
 namespace Vernou.Ariane.Tools.Commands;
 internal class AuditCommand
 {
+    private readonly string _projectPath;
+    private readonly IOutput _output;
+
+    public AuditCommand(string projectPath, IOutput output)
+    {
+        _projectPath = projectPath;
+        _output = output;
+    }
+
     public async Task RunAsync()
     {
-        var projectName = """HowFix.Demo""";
-        //var assetsPath = """C:\t\HowFix.Demo\HowFix.Demo\obj\project.assets.json""";
-        var assetsPath = """C:\repos\efcore\artifacts\obj\EFCore.SqlServer\project.assets.json""";
-
-        if(!File.Exists(assetsPath))
+        if(!File.Exists(_projectPath))
         {
-            throw new InvalidOperationException($"No assets file was found for `{projectName}`. Please run restore before running this command.");
+            throw new InvalidOperationException($"The project file `{_projectPath}` doesn't exist.");
         }
 
-        var lockFileFormat = new LockFileFormat();
-        LockFile assetsFile = lockFileFormat.Read(assetsPath);
-
-        // Assets file validation
-        if(assetsFile.PackageSpec == null ||
-            assetsFile.Targets == null ||
-            assetsFile.Targets.Count == 0)
+        var fileName = Path.GetFileName(_projectPath);
+        IProjectResolver resolver;
+        if(fileName == "project.assets.json")
         {
-            throw new InvalidOperationException($"Unable to read the assets file `{assetsPath}`. Please make sure the file has the write format.");
+            resolver = new AssetsProjectResolver();
+        }
+        else
+        {
+            throw new InvalidOperationException("Unresolvable project type.");
         }
 
-        var resolver = new ProjectResolver(assetsFile);
-        var project = resolver.Resolve();
+        var project = resolver.Resolve(_projectPath);
         Display(project, 0);
         await Task.CompletedTask;
     }
@@ -49,10 +55,10 @@ internal class AuditCommand
             packageReference.PackageReferences.Any(HasProblem);
     }
 
-    static void Display(Models.Project project, int level)
+    private void Display(Models.Project project, int level)
     {
         Align(level);
-        Console.WriteLine($"{project}");
+        _output.WriteLine($"{project}");
         foreach(var reference in project.ProjectReferences)
         {
             if(HasProblem(reference))
@@ -66,27 +72,21 @@ internal class AuditCommand
         }
     }
 
-    static void Display(Models.PackageReference package, int level)
+    private void Display(Models.PackageReference package, int level)
     {
         if(HasProblem(package.Dependency))
         {
             Align(level);
-            Console.Write($"{package.Version} -> {package.Dependency}");
+            _output.Write($"{package.Version} -> {package.Dependency}");
             if(package.Dependency.HasVulnerability)
             {
-                var origin = Console.ForegroundColor;
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.Write(" (has vulnerability)");
-                Console.ForegroundColor = origin;
+                _output.Write(" (has vulnerability)", ConsoleColor.Red);
             }
             if(package.Dependency.IsDeprecated)
             {
-                var origin = Console.ForegroundColor;
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.Write(" (is deprecated)");
-                Console.ForegroundColor = origin;
+                _output.Write(" (is deprecated)", ConsoleColor.Yellow);
             }
-            Console.WriteLine();
+            _output.WriteLine();
             foreach(var reference in package.Dependency.PackageReferences)
             {
                 Display(reference, level + 1);
@@ -94,11 +94,12 @@ internal class AuditCommand
         }
     }
 
-    static void Align(int level)
+    private void Align(int level)
     {
-        for(var i = 0; i < level; i++)
+        var tabs = new string('\t', level);
+        if(tabs.Length > 0)
         {
-            Console.Write('\t');
+            _output.Write(tabs);
         }
     }
 }
