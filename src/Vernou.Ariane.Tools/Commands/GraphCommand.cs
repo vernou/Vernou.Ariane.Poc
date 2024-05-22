@@ -39,7 +39,7 @@ public sealed class GraphCommand
 
     private void Display(Models.Project project, int level)
     {
-        Align(level);
+        _output.WriteTabs(level);
         _output.WriteLine($"{project}");
         foreach(var reference in project.ProjectReferences)
         {
@@ -53,7 +53,7 @@ public sealed class GraphCommand
 
     private void Display(Models.PackageReference package, int level)
     {
-        Align(level);
+        _output.WriteTabs(level);
         _output.Write($"{package.Version} -> {package.Dependency}");
         if(package.Dependency.HasVulnerability)
         {
@@ -67,15 +67,6 @@ public sealed class GraphCommand
         foreach(var reference in package.Dependency.PackageReferences)
         {
             Display(reference, level + 1);
-        }
-    }
-
-    private void Align(int level)
-    {
-        var tabs = new string('\t', level);
-        if(tabs.Length > 0)
-        {
-            _output.Write(tabs);
         }
     }
 }

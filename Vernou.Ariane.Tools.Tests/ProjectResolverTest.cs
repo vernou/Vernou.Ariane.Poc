@@ -13,7 +13,7 @@ public sealed class ProjectResolverTest
 
         LockFile assetsFile;
         var lockFileFormat = new LockFileFormat();
-        assetsFile = lockFileFormat.Read("""AssetsFiles\ConsoleWithoutDependency.assets.json""");
+        assetsFile = lockFileFormat.Read("""AssetsFiles\ConsoleWithoutDependency\project.assets.json""");
 
         // Act
 
@@ -37,7 +37,7 @@ public sealed class ProjectResolverTest
 
         LockFile assetsFile;
         var lockFileFormat = new LockFileFormat();
-        assetsFile = lockFileFormat.Read("""AssetsFiles\ConsoleWithLibraryWithEFCore.assets.json""");
+        assetsFile = lockFileFormat.Read("""AssetsFiles\ConsoleWithLibraryWithEFCore\project.assets.json""");
 
         // Act
 

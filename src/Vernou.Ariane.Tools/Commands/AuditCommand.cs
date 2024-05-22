@@ -57,7 +57,7 @@ internal class AuditCommand
 
     private void Display(Models.Project project, int level)
     {
-        Align(level);
+        _output.WriteTabs(level);
         _output.WriteLine($"{project}");
         foreach(var reference in project.ProjectReferences)
         {
@@ -76,7 +76,7 @@ internal class AuditCommand
     {
         if(HasProblem(package.Dependency))
         {
-            Align(level);
+            _output.WriteTabs(level);
             _output.Write($"{package.Version} -> {package.Dependency}");
             if(package.Dependency.HasVulnerability)
             {
@@ -91,15 +91,6 @@ internal class AuditCommand
             {
                 Display(reference, level + 1);
             }
-        }
-    }
-
-    private void Align(int level)
-    {
-        var tabs = new string('\t', level);
-        if(tabs.Length > 0)
-        {
-            _output.Write(tabs);
         }
     }
 }
